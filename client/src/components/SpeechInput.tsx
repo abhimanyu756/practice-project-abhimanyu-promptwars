@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 
 interface SpeechInputProps {
   onTranscript: (text: string) => void;
@@ -6,60 +6,63 @@ interface SpeechInputProps {
 
 export const SpeechInput: React.FC<SpeechInputProps> = ({ onTranscript }) => {
   const [isListening, setIsListening] = useState(false);
-  const [supported, setSupported] = useState(true);
-  const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
-  const toggleListening = useCallback(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      setSupported(false);
-      return;
-    }
-
-    if (isListening && recognitionRef.current) {
-      recognitionRef.current.stop();
+  const toggleListening = async () => {
+    if (isListening && mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
       setIsListening(false);
       return;
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+      chunksRef.current = [];
 
-    recognition.onresult = (event: any) => {
-      const last = event.results.length - 1;
-      const transcript = event.results[last][0].transcript;
-      onTranscript(transcript);
-    };
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
 
-    recognition.onerror = () => {
-      setIsListening(false);
-    };
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const base64 = (reader.result as string).split(',')[1];
+          try {
+            const res = await fetch('/api/speech/transcribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ audio: base64 }),
+            });
+            const data = await res.json();
+            if (data.transcript) onTranscript(data.transcript);
+          } catch {
+            // Fallback silently
+          }
+        };
+        reader.readAsDataURL(blob);
+      };
 
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
-  }, [isListening, onTranscript]);
-
-  if (!supported) {
-    return null;
-  }
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsListening(true);
+    } catch {
+      // Mic not available
+    }
+  };
 
   return (
     <button
       className={`btn btn--outline btn--sm ${isListening ? 'btn--recording' : ''}`}
       onClick={toggleListening}
       type="button"
-      aria-label={isListening ? 'Stop voice recording' : 'Start voice input'}
+      aria-label={isListening ? 'Stop voice recording' : 'Start voice input via Google Speech-to-Text'}
     >
       <span className="btn__icon">{isListening ? '\u{1F534}' : '\u{1F3A4}'}</span>
-      {isListening ? 'Listening...' : 'Voice Input'}
+      {isListening ? 'Stop Recording' : 'Voice Input'}
     </button>
   );
 };

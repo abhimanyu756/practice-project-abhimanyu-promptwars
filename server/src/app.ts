@@ -6,6 +6,7 @@ import aiRoutes from './routes/ai';
 import doctorsRoutes from './routes/doctors';
 import weatherRoutes from './routes/weather';
 import dossierRoutes from './routes/dossier';
+import speechRoutes from './routes/speech';
 import { apiLimiter, aiLimiter } from './middleware/rateLimiter';
 
 const app = express();
@@ -38,6 +39,7 @@ app.use('/api/ai', aiLimiter, aiRoutes);
 app.use('/api/doctors', doctorsRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/dossier', dossierRoutes);
+app.use('/api/speech', aiLimiter, speechRoutes);
 
 // Serve React client in production
 const publicPath = path.join(__dirname, '..', 'public');

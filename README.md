@@ -113,6 +113,7 @@ Step 1: INPUT                    Step 2: ANALYSIS                Step 3: DASHBOA
 | **Google Weather API** | Fetches real-time temperature, humidity, and conditions for the patient's location; data is injected into the Gemini prompt for weather-health correlation analysis |
 | **Google Places API (New)** | Searches for nearby doctors and hospitals within 5km radius, using `X-Goog-Api-Key` header auth and field masking (`displayName`, `rating`, `formattedAddress`, `location`, `reviews`) |
 | **Google Maps JavaScript SDK** | Interactive embedded map via `@vis.gl/react-google-maps` with `AdvancedMarker`, `InfoWindow`, and user location display |
+| **Google Cloud Speech-to-Text** | Records audio from user's microphone, sends to Speech-to-Text API for transcription — enables voice-based symptom description in emergencies |
 | **Google Geocoding API** | Reverse geocodes GPS coordinates to human-readable location names, displayed in patient dashboard stats bar and included in AI context |
 | **FHIR R4 DiagnosticReport** | Healthcare interoperability standard -- AI output is wrapped in a compliant DiagnosticReport structure with base64-encoded S.O.A.P. data |
 
