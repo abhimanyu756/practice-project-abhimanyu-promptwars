@@ -4,3 +4,12 @@ build/
 .env
 .DS_Store
 *.log
+
+# Unnecessary files
+mock-prototype.html
+agents.md
+skills.md
+DESIGN_GUIDELINES.md
+client/src/assets/hero.png
+client/src/assets/react.svg
+client/src/assets/vite.svg

@@ -16,7 +16,7 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", 'https://maps.googleapis.com'],
       imgSrc: ["'self'", 'data:', 'https://maps.googleapis.com', 'https://maps.gstatic.com'],
-      connectSrc: ["'self'", 'https://generativelanguage.googleapis.com', 'https://places.googleapis.com', 'https://weather.googleapis.com'],
+      connectSrc: ["'self'", 'https://generativelanguage.googleapis.com', 'https://places.googleapis.com', 'https://weather.googleapis.com', 'https://maps.googleapis.com'],
     },
   },
 }));

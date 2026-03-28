@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Dropzone } from './components/Dropzone';
+import { SpeechInput } from './components/SpeechInput';
+import { CameraCapture } from './components/CameraCapture';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { EmergencyBanner } from './components/EmergencyBanner';
 import { SoapNote } from './components/SoapNote';
@@ -18,6 +20,8 @@ interface AnalysisData {
   specialty: string;
   firstAidSteps: string[];
   weatherContext?: { temp: number; humidity: number; description: string };
+  weatherImpact?: string;
+  locationName?: string;
   fhir: any;
 }
 
@@ -196,7 +200,9 @@ function App() {
                   placeholder="e.g. 'He just collapsed... breathing heavy. Found pill bottles next to him.'"
                   aria-label="Describe the emergency situation"
                 />
-                <div className="row" style={{ gap: '12px' }}>
+                <div className="input-actions">
+                  <SpeechInput onTranscript={(text) => setSymptoms((prev) => prev + (prev ? ' ' : '') + text)} />
+                  <CameraCapture onCapture={(file) => setFiles((prev) => [...prev, file].slice(0, 5))} />
                   <button
                     className="btn btn--outline btn--sm"
                     onClick={requestLocation}
@@ -283,6 +289,12 @@ function App() {
                   {result.weatherContext ? `${result.weatherContext.temp}°C` : 'N/A'}
                 </span>
               </div>
+              {result.locationName && (
+                <div className="stat-item stat-item--wide">
+                  <span className="stat-label">Location</span>
+                  <span className="stat-value stat-value--sm">{result.locationName}</span>
+                </div>
+              )}
             </div>
 
             {/* Tab Navigation */}
@@ -312,7 +324,7 @@ function App() {
 
                   <div className="grid-2">
                     {result.weatherContext && (
-                      <WeatherCard weather={result.weatherContext} />
+                      <WeatherCard weather={result.weatherContext} weatherImpact={result.weatherImpact} />
                     )}
                     <FirstAidSteps steps={result.firstAidSteps} />
                   </div>

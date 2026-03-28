@@ -11,7 +11,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({ onFilesSelected, files }) =>
   const handleFiles = useCallback(
     (fileList: FileList | null) => {
       if (!fileList) return;
-      const selected = Array.from(fileList).slice(0, 3);
+      const selected = Array.from(fileList).slice(0, 5);
       onFilesSelected(selected);
     },
     [onFilesSelected]
@@ -37,7 +37,10 @@ export const Dropzone: React.FC<DropzoneProps> = ({ onFilesSelected, files }) =>
     handleFiles(e.dataTransfer.files);
   };
 
+  const imageFiles = files.filter(f => f.type.startsWith('image/'));
+  const pdfFiles = files.filter(f => f.type === 'application/pdf');
   const filled = files.length > 0;
+
   const className = [
     'dropzone',
     isDragging ? 'dropzone--active' : '',
@@ -51,7 +54,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({ onFilesSelected, files }) =>
       className={className}
       role="button"
       tabIndex={0}
-      aria-label="Upload secure medical images by dropping or clicking"
+      aria-label="Upload medical images or PDF documents by dropping or clicking"
       onKeyDown={handleKeyDown}
       onClick={() => document.getElementById('fileUpload')?.click()}
       onDragOver={handleDragOver}
@@ -64,7 +67,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({ onFilesSelected, files }) =>
         className="sr-only"
         aria-hidden="true"
         multiple
-        accept="image/*"
+        accept="image/*,.pdf"
         onChange={(e) => handleFiles(e.target.files)}
       />
       <span className="dropzone__icon" aria-hidden="true">
@@ -72,9 +75,19 @@ export const Dropzone: React.FC<DropzoneProps> = ({ onFilesSelected, files }) =>
       </span>
       <p className="text-body">
         {filled
-          ? <strong>{files.length} evidence file(s) attached</strong>
-          : <>Drag & drop evidence here, or press <strong>Space</strong> / <strong>Click</strong> to upload</>
+          ? (
+            <strong>
+              {imageFiles.length > 0 && `${imageFiles.length} image(s)`}
+              {imageFiles.length > 0 && pdfFiles.length > 0 && ' + '}
+              {pdfFiles.length > 0 && `${pdfFiles.length} PDF(s)`}
+              {' attached'}
+            </strong>
+          )
+          : <>Drag & drop photos or PDFs, or <strong>click</strong> to upload</>
         }
+      </p>
+      <p className="text-caption text-tertiary">
+        Supports images and medical PDF documents
       </p>
     </div>
   );

@@ -140,6 +140,75 @@
   text-align: center;
 }
 
+.input-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+/* Recording pulse */
+.btn--recording {
+  border-color: var(--color-critical);
+  animation: recordingPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes recordingPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 59, 48, 0); }
+}
+
+/* Camera Overlay */
+.camera-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-container {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.camera-video {
+  width: 100%;
+  border-radius: var(--radius-xl);
+  background: #000;
+}
+
+.camera-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--space-4);
+}
+
+.camera-shutter {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: white;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-standard);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+}
+
+.camera-shutter:hover {
+  transform: scale(1.1);
+}
+
+.camera-shutter:active {
+  transform: scale(0.95);
+}
+
 /* ===================
    OUTPUT PHASE LAYOUT
    =================== */
@@ -210,6 +279,15 @@
   text-transform: capitalize;
 }
 
+.stat-value--sm {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.stat-item--wide {
+  grid-column: span 2;
+}
+
 /* Tab Navigation */
 .tab-nav {
   display: flex;
@@ -272,6 +350,50 @@
   text-align: center;
   padding: var(--space-12) var(--space-8);
   align-items: center;
+}
+
+/* Weather Stats */
+.weather-stats {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.weather-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 1;
+  padding: var(--space-3);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-md);
+}
+
+.weather-stat__icon {
+  font-size: 24px;
+}
+
+.weather-stat__value {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.weather-stat__label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-tertiary);
+}
+
+.weather-impact {
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  background: rgba(255, 149, 0, 0.06);
+  border: 1px solid rgba(255, 149, 0, 0.2);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 /* FHIR JSON Display */

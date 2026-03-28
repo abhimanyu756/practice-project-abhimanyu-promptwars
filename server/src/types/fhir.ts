@@ -42,6 +42,7 @@ export interface AnalysisResult {
   emergency: EmergencyFlag;
   specialty: string;
   firstAidSteps: string[];
+  weatherImpact?: string;
 }
 
 export interface DossierRecord {

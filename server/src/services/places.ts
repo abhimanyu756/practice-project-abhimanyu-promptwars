@@ -37,16 +37,28 @@ export async function searchNearbyDoctors(
 
   console.log(`[PLACES-SVC] Searching Google Places API — center=(${lat}, ${lng}), specialty=${specialty || 'any'}`);
 
-  const { data } = await axios.post(PLACES_API_BASE, requestBody, {
-    headers: {
-      'X-Goog-Api-Key': apiKey,
-      'X-Goog-FieldMask': fieldMask,
-      'Content-Type': 'application/json',
-    },
-    timeout: 8000,
-  });
+  let data: any;
+  try {
+    const response = await axios.post(PLACES_API_BASE, requestBody, {
+      headers: {
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': fieldMask,
+        'Content-Type': 'application/json',
+      },
+      timeout: 8000,
+    });
+    data = response.data;
+  } catch (err: any) {
+    const errMsg = err.response?.data?.error?.message || err.message;
+    const errStatus = err.response?.status;
+    console.error(`[PLACES-SVC] Google Places API error (${errStatus}): ${errMsg}`);
+    if (errStatus === 403) {
+      console.error('[PLACES-SVC] 403 Forbidden — check API key restrictions: remove HTTP referrer restrictions for server-side use, or ensure Places API (New) is enabled');
+    }
+    return [];
+  }
 
-  if (!data.places) {
+  if (!data?.places) {
     console.log('[PLACES-SVC] Google Places returned no results');
     return [];
   }

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { GoogleGenAI } from '@google/genai';
 import { getCurrentWeather } from '../services/weather';
+import { reverseGeocode } from '../services/geocode';
 import { validateAnalyzeInput } from '../middleware/validateInput';
 import { AnalysisResult, FHIRDiagnosticReport } from '../types/fhir';
 
@@ -39,13 +40,20 @@ router.post('/analyze', validateAnalyzeInput, async (req: Request, res: Response
     }
 
     let weatherContext;
+    let locationName = '';
     if (typeof lat === 'number' && typeof lng === 'number') {
       try {
         console.log(`[AI] Fetching weather for coords (${lat}, ${lng})...`);
-        weatherContext = await getCurrentWeather(lat, lng);
+        const [weather, geoName] = await Promise.all([
+          getCurrentWeather(lat, lng),
+          reverseGeocode(lat, lng),
+        ]);
+        weatherContext = weather;
+        locationName = geoName;
         console.log(`[AI] Weather fetched: ${weatherContext.description}, ${weatherContext.temp}°C`);
+        console.log(`[AI] Location resolved: ${locationName}`);
       } catch (err) {
-        console.error('[AI] Weather fetch failed during analysis, skipping:', err);
+        console.error('[AI] Weather/geocode fetch failed, skipping:', err);
         weatherContext = undefined;
       }
     }
@@ -53,19 +61,30 @@ router.post('/analyze', validateAnalyzeInput, async (req: Request, res: Response
     const weatherInfo = weatherContext
       ? `Current weather: ${weatherContext.description}, ${weatherContext.temp}°C, humidity ${weatherContext.humidity}%.`
       : '';
+    const locationInfo = locationName ? `Patient location: ${locationName}.` : '';
 
-    const prompt = `Act as an expert EMT AI. Analyze the following chaotic patient inputs into structured medical data.
+    const prompt = `Act as an expert EMT AI and clinical analyst. Analyze the following chaotic patient inputs into structured medical data.
 
+${locationInfo}
 ${weatherInfo}
 
 Patient context: ${text}
+
+IMPORTANT WEATHER-HEALTH CORRELATION:
+If weather data is provided, you MUST analyze how environmental conditions may contribute to or worsen the patient's condition. Consider:
+- High temperature (>35°C): heat exhaustion, dehydration, heat stroke, worsened cardiovascular strain
+- High humidity (>80%): fungal infections worsen, respiratory distress, impaired thermoregulation
+- Cold temperature (<10°C): hypothermia risk, Raynaud's flares, asthma triggers, frostbite
+- Hot + humid: skin rashes (miliaria), fungal growth, electrolyte imbalance risk
+- Air quality/pollution: respiratory exacerbation, allergic reactions
+Include weather-related risk factors in the "objective" field and any weather-aggravated conditions in the "assessment" field.
 
 Return ONLY a valid JSON object matching this exact interface:
 {
   "soap": {
     "subjective": "Patient's reported symptoms and feelings",
-    "objective": "Observable data from photos, vitals, weather conditions",
-    "assessment": "Clinical assessment and potential diagnoses",
+    "objective": "Observable data from photos, vitals, AND weather-health correlation analysis",
+    "assessment": "Clinical assessment including weather-aggravated conditions and potential diagnoses",
     "plan": ["Step 1", "Step 2"]
   },
   "emergency": {
@@ -74,7 +93,8 @@ Return ONLY a valid JSON object matching this exact interface:
     "keywords": ["detected emergency keywords"]
   },
   "specialty": "Recommended medical specialty (e.g. Dermatologist, Cardiologist, General Practice)",
-  "firstAidSteps": ["Immediate step 1", "Immediate step 2"]
+  "firstAidSteps": ["Immediate step 1", "Immediate step 2"],
+  "weatherImpact": "Brief explanation of how current weather conditions may affect the patient's condition (or 'No significant weather impact' if not applicable)"
 }
 
 CRITICAL: If you detect keywords like chest pain, difficulty breathing, severe bleeding, stroke symptoms, loss of consciousness, or anaphylaxis, set isEmergency to true and severity to critical.`;
@@ -121,7 +141,7 @@ CRITICAL: If you detect keywords like chest pain, difficulty breathing, severe b
 
     return res.status(200).json({
       success: true,
-      data: { ...parsed, weatherContext, fhir },
+      data: { ...parsed, weatherContext, locationName: locationName || undefined, fhir },
     });
   } catch (error) {
     console.error(`[AI] Analysis FAILED after ${Date.now() - startTime}ms:`, error);
