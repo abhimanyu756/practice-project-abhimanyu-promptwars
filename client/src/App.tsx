@@ -53,6 +53,7 @@ function App() {
   const [doctors, setDoctors] = useState<PlaceResult[]>([]);
   const [dossierId, setDossierId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'doctors' | 'dossier'>('overview');
 
   const requestLocation = () => {
     if (!('geolocation' in navigator)) {
@@ -129,89 +130,113 @@ function App() {
     setDoctors([]);
     setDossierId(null);
     setError(null);
+    setActiveTab('overview');
   };
+
+  const now = new Date();
+  const timestamp = now.toLocaleString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
 
   return (
     <>
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
+
+      {/* Top Nav Bar */}
+      <nav className="topbar" aria-label="Main navigation">
+        <div className="topbar__brand">
+          <span className="topbar__logo">+</span>
+          <span className="topbar__title">MedBridge AI</span>
+        </div>
+        <div className="topbar__meta text-caption text-tertiary">
+          {phase === 'output' && result ? (
+            <span className={`topbar__status ${result.emergency.isEmergency ? 'topbar__status--critical' : 'topbar__status--ok'}`}>
+              {result.emergency.isEmergency ? 'EMERGENCY' : 'STABLE'}
+            </span>
+          ) : null}
+          <span>{timestamp}</span>
+        </div>
+      </nav>
+
       <main
         id="main-content"
-        className="container stack stack--lg"
+        className="dashboard-container"
         role="main"
-        aria-label="MedBridge Emergency Dashboard"
+        aria-label="MedBridge Patient Dashboard"
       >
-        <header className="text-center">
-          <h1 className="text-display text-gradient">MedBridge AI</h1>
-          <p className="text-body text-secondary">
-            Universal Emergency Bridge: Chaos to Action
-          </p>
-        </header>
-
         {/* INPUT PHASE */}
         {phase === 'input' && (
-          <section
-            className="glass-panel animate-fade-in-up stack stack--md"
-            aria-labelledby="input-heading"
-          >
-            <h2 id="input-heading" className="text-overline text-secondary">
-              1. Upload Medical Evidence
-            </h2>
-            <Dropzone onFilesSelected={setFiles} files={files} />
+          <div className="input-layout animate-fade-in-up">
+            <div className="input-hero">
+              <h1 className="text-display text-gradient">Emergency Intelligence</h1>
+              <p className="text-body text-secondary">
+                Upload photos and describe the situation. Our AI transforms chaotic inputs into structured clinical data.
+              </p>
+            </div>
 
-            <h2 className="text-overline text-secondary">
-              2. Describe Emergency
-            </h2>
-            <textarea
-              className="input"
-              value={symptoms}
-              onChange={(e) => setSymptoms(e.target.value)}
-              placeholder="e.g. 'He just collapsed... breathing heavy. Found pill bottles next to him.'"
-              aria-label="Describe the emergency situation"
-            />
+            <div className="input-grid">
+              <section className="glass-panel stack stack--md" aria-labelledby="upload-heading">
+                <h2 id="upload-heading" className="text-overline text-secondary">
+                  Medical Evidence
+                </h2>
+                <Dropzone onFilesSelected={setFiles} files={files} />
+              </section>
 
-            <div className="row" style={{ justifyContent: 'space-between' }}>
-              <button
-                className="btn btn--outline"
-                onClick={requestLocation}
-                type="button"
-                aria-label="Share your GPS location for weather and doctor search"
-              >
-                {locationStatus || '\u{1F4CD} Share Location'}
-              </button>
+              <section className="glass-panel stack stack--md" aria-labelledby="symptoms-heading">
+                <h2 id="symptoms-heading" className="text-overline text-secondary">
+                  Situation Description
+                </h2>
+                <textarea
+                  className="input"
+                  value={symptoms}
+                  onChange={(e) => setSymptoms(e.target.value)}
+                  placeholder="e.g. 'He just collapsed... breathing heavy. Found pill bottles next to him.'"
+                  aria-label="Describe the emergency situation"
+                />
+                <div className="row" style={{ gap: '12px' }}>
+                  <button
+                    className="btn btn--outline btn--sm"
+                    onClick={requestLocation}
+                    type="button"
+                    aria-label="Share GPS location for nearby doctors and weather"
+                  >
+                    <span className="btn__icon">&#x1F4CD;</span>
+                    {locationStatus || 'Share Location'}
+                  </button>
+                  {location && (
+                    <span className="badge badge--success">GPS Active</span>
+                  )}
+                </div>
+              </section>
             </div>
 
             {error && (
-              <p className="text-body text-critical" role="alert">
+              <p className="text-body text-critical input-error" role="alert">
                 {error}
               </p>
             )}
 
             <button
-              className="btn btn--primary"
+              className="btn btn--primary btn--lg"
               onClick={handleAnalyze}
               type="button"
             >
-              Process with Gemini Multimodal AI
+              Analyze with Gemini AI
+              <span className="btn__arrow">&rarr;</span>
             </button>
-          </section>
+          </div>
         )}
 
         {/* LOADING PHASE */}
         {phase === 'loading' && <LoadingSpinner />}
 
-        {/* OUTPUT PHASE */}
+        {/* OUTPUT PHASE — Patient Dashboard */}
         {phase === 'output' && result && (
-          <section
-            className="glass-panel animate-fade-in-up stack stack--lg"
-            aria-labelledby="output-heading"
-          >
-            <div className="dashboard-header">
-              <h2 id="output-heading">Clinical Dossier</h2>
-              <span className="badge badge--success">Analysis Complete</span>
-            </div>
-
+          <div className="output-layout animate-fade-in">
+            {/* Emergency Banner — top priority */}
             {result.emergency.isEmergency && (
               <EmergencyBanner
                 isEmergency={result.emergency.isEmergency}
@@ -220,44 +245,155 @@ function App() {
               />
             )}
 
-            <div className="grid-2">
-              <SoapNote soap={result.soap} />
+            {/* Dashboard Header */}
+            <header className="dash-header">
+              <div className="dash-header__left">
+                <h1 className="dash-header__title">Patient Dashboard</h1>
+                <div className="dash-header__badges">
+                  <span className={`badge ${result.emergency.isEmergency ? 'badge--critical' : 'badge--success'}`}>
+                    {result.emergency.severity}
+                  </span>
+                  <span className="badge badge--info">{result.specialty}</span>
+                </div>
+              </div>
+              <button className="btn btn--outline btn--sm" onClick={resetApp} type="button">
+                New Analysis
+              </button>
+            </header>
 
-              {result.weatherContext && (
-                <WeatherCard weather={result.weatherContext} />
-              )}
+            {/* Stats Bar */}
+            <div className="stats-bar">
+              <div className="stat-item">
+                <span className="stat-label">Severity</span>
+                <span className={`stat-value ${result.emergency.isEmergency ? 'text-critical' : 'text-success'}`}>
+                  {result.emergency.severity}
+                </span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Specialty</span>
+                <span className="stat-value">{result.specialty}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Doctors Found</span>
+                <span className="stat-value">{doctors.length}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Weather</span>
+                <span className="stat-value">
+                  {result.weatherContext ? `${result.weatherContext.temp}°C` : 'N/A'}
+                </span>
+              </div>
+            </div>
 
-              <FirstAidSteps steps={result.firstAidSteps} />
-
-              {location && doctors.length > 0 && (
-                <DoctorMap doctors={doctors} userLocation={location} />
-              )}
-
-              {doctors.map((doc) => (
-                <DoctorCard key={doc.placeId} doctor={doc} />
+            {/* Tab Navigation */}
+            <div className="tab-nav" role="tablist" aria-label="Dashboard sections">
+              {(['overview', 'doctors', 'dossier'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  role="tab"
+                  aria-selected={activeTab === tab}
+                  className={`tab-btn ${activeTab === tab ? 'tab-btn--active' : ''}`}
+                  onClick={() => setActiveTab(tab)}
+                  type="button"
+                >
+                  {tab === 'overview' && 'Clinical Overview'}
+                  {tab === 'doctors' && `Nearby Doctors (${doctors.length})`}
+                  {tab === 'dossier' && 'Dossier & QR'}
+                </button>
               ))}
-
-              {dossierId && <QRCodeCard dossierId={dossierId} />}
             </div>
 
-            <div className="row row--responsive">
-              <button
-                className="btn btn--outline"
-                onClick={resetApp}
-                type="button"
-              >
-                Start Over
-              </button>
-              <button
-                className="btn btn--primary"
-                onClick={() => alert('Structured alert data dispatched via FHIR/HL7 format.')}
-                type="button"
-                style={{ flex: 2 }}
-              >
-                Dispatch Structured Alert Data
-              </button>
+            {/* Tab Panels */}
+            <div role="tabpanel" aria-label={`${activeTab} panel`}>
+              {/* OVERVIEW TAB */}
+              {activeTab === 'overview' && (
+                <div className="tab-content animate-fade-in">
+                  <SoapNote soap={result.soap} />
+
+                  <div className="grid-2">
+                    {result.weatherContext && (
+                      <WeatherCard weather={result.weatherContext} />
+                    )}
+                    <FirstAidSteps steps={result.firstAidSteps} />
+                  </div>
+                </div>
+              )}
+
+              {/* DOCTORS TAB */}
+              {activeTab === 'doctors' && (
+                <div className="tab-content animate-fade-in">
+                  {location && doctors.length > 0 && (
+                    <DoctorMap doctors={doctors} userLocation={location} />
+                  )}
+
+                  {doctors.length > 0 ? (
+                    <div className="doctors-grid">
+                      {doctors.map((doc) => (
+                        <DoctorCard key={doc.placeId} doctor={doc} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="glass-card empty-state">
+                      <p className="text-body text-secondary">
+                        {location
+                          ? 'No nearby doctors found. Try expanding your search radius.'
+                          : 'Enable location sharing to find nearby doctors.'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* DOSSIER TAB */}
+              {activeTab === 'dossier' && (
+                <div className="tab-content animate-fade-in">
+                  <div className="dossier-layout">
+                    {dossierId && <QRCodeCard dossierId={dossierId} />}
+
+                    <div className="glass-card">
+                      <h3 className="data-card-title">FHIR DiagnosticReport</h3>
+                      <p className="text-caption text-secondary" style={{ marginBottom: '12px' }}>
+                        HL7 FHIR R4 compliant clinical data — ready for EHR integration
+                      </p>
+                      <pre className="fhir-json">
+                        {JSON.stringify(result.fhir, null, 2)}
+                      </pre>
+                    </div>
+
+                    <div className="glass-card">
+                      <h3 className="data-card-title">Actions</h3>
+                      <div className="stack stack--sm">
+                        <button
+                          className="btn btn--primary"
+                          onClick={() => {
+                            const blob = new Blob([JSON.stringify(result.fhir, null, 2)], { type: 'application/json' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `medbridge-dossier-${dossierId || 'report'}.json`;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                          type="button"
+                        >
+                          Download FHIR Report
+                        </button>
+                        <button
+                          className="btn btn--outline"
+                          onClick={() => {
+                            navigator.clipboard.writeText(JSON.stringify(result.fhir, null, 2));
+                          }}
+                          type="button"
+                        >
+                          Copy to Clipboard
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </section>
+          </div>
         )}
       </main>
     </>

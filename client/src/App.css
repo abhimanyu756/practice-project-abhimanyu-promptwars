@@ -1,17 +1,89 @@
 /* ============================================================
-   MedBridge AI — Component Class Library
-   Composable glass components built on design tokens
+   MedBridge AI — Patient Dashboard Component Library
+   Apple-inspired glassmorphism + interactive dashboard
    ============================================================ */
+
+/* ===================
+   TOP NAVIGATION BAR
+   =================== */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-6);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.topbar__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #2563eb, #0a84ff);
+  border-radius: var(--radius-sm);
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+}
+
+.topbar__title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+.topbar__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.topbar__status {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+}
+
+.topbar__status--ok {
+  background: rgba(52, 199, 89, 0.15);
+  color: var(--color-success);
+  border: 1px solid rgba(52, 199, 89, 0.3);
+}
+
+.topbar__status--critical {
+  background: rgba(255, 59, 48, 0.15);
+  color: var(--color-critical);
+  border: 1px solid rgba(255, 59, 48, 0.3);
+  animation: pulse 1.5s ease-in-out infinite;
+}
 
 /* ===================
    LAYOUT
    =================== */
 
-.container {
+.dashboard-container {
   width: 100%;
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: var(--space-6);
+  min-height: calc(100vh - 56px);
 }
 
 .stack {
@@ -27,13 +99,194 @@
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-6);
+  gap: var(--space-4);
 }
 
 .row {
   display: flex;
   gap: var(--space-4);
   align-items: center;
+}
+
+/* ===================
+   INPUT PHASE LAYOUT
+   =================== */
+
+.input-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 800px;
+  margin: var(--space-8) auto 0;
+}
+
+.input-hero {
+  text-align: center;
+  padding: var(--space-8) 0 var(--space-4);
+}
+
+.input-hero p {
+  max-width: 520px;
+  margin: var(--space-3) auto 0;
+}
+
+.input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.input-error {
+  text-align: center;
+}
+
+/* ===================
+   OUTPUT PHASE LAYOUT
+   =================== */
+
+.output-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+/* Dashboard Header */
+.dash-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dash-header__title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+}
+
+.dash-header__badges {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+/* Stats Bar */
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+}
+
+.stat-item {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-normal) var(--ease-standard);
+}
+
+.stat-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  text-transform: capitalize;
+}
+
+/* Tab Navigation */
+.tab-nav {
+  display: flex;
+  gap: var(--space-1);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-lg);
+  padding: var(--space-1);
+  border: 1px solid var(--glass-border);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.tab-btn:hover {
+  color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tab-btn--active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Tab Content */
+.tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Doctors Grid */
+.doctors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Dossier Layout */
+.dossier-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: var(--space-12) var(--space-8);
+  align-items: center;
+}
+
+/* FHIR JSON Display */
+.fhir-json {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 /* ===================
@@ -59,6 +312,12 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-normal) var(--ease-standard);
+}
+
+.glass-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .glass-card--alert {
@@ -162,11 +421,38 @@
   box-shadow: var(--shadow-glow);
 }
 
+.btn--lg {
+  min-height: 56px;
+  font-size: 18px;
+  border-radius: var(--radius-xl);
+}
+
+.btn--sm {
+  min-height: 36px;
+  padding: var(--space-2) var(--space-4);
+  font-size: 13px;
+  width: auto;
+}
+
+.btn__icon {
+  font-size: 16px;
+}
+
+.btn__arrow {
+  font-size: 20px;
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.btn:hover .btn__arrow {
+  transform: translateX(4px);
+}
+
 .btn--outline {
   background: transparent;
   color: var(--color-text-primary);
   border: 1px solid var(--glass-border);
   flex: 1;
+  width: auto;
 }
 
 .btn--outline:hover {
@@ -306,7 +592,7 @@
 }
 
 /* ===================
-   DASHBOARD
+   DASHBOARD DATA
    =================== */
 
 .dashboard-header {
@@ -444,8 +730,8 @@
    RESPONSIVE
    =================== */
 
-@media (max-width: 640px) {
-  .container {
+@media (max-width: 768px) {
+  .dashboard-container {
     padding: var(--space-4);
   }
 
@@ -455,20 +741,42 @@
   }
 
   .text-display {
-    font-size: 36px;
-    line-height: 44px;
+    font-size: 32px;
+    line-height: 40px;
     letter-spacing: -1px;
+  }
+
+  .input-grid {
+    grid-template-columns: 1fr;
   }
 
   .grid-2 {
     grid-template-columns: 1fr;
   }
 
-  .row--responsive {
-    flex-direction: column;
+  .stats-bar {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .dashboard-header {
+  .tab-nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab-btn {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .dossier-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .doctors-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-header {
     flex-direction: column;
     gap: var(--space-3);
     align-items: flex-start;
@@ -476,5 +784,28 @@
 
   .dropzone {
     padding: var(--space-8) var(--space-4);
+  }
+
+  .row--responsive {
+    flex-direction: column;
+  }
+
+  .topbar__meta {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-bar {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2);
+  }
+
+  .stat-item {
+    padding: var(--space-3);
+  }
+
+  .stat-value {
+    font-size: 16px;
   }
 }
