@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 import helmet from 'helmet';
 import cors from 'cors';
 import aiRoutes from './routes/ai';
@@ -37,6 +38,14 @@ app.use('/api/ai', aiLimiter, aiRoutes);
 app.use('/api/doctors', doctorsRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/dossier', dossierRoutes);
+
+// Serve React client in production
+const publicPath = path.join(__dirname, '..', 'public');
+app.use(express.static(publicPath));
+app.get('{*path}', (_req, res, next) => {
+  if (_req.path.startsWith('/api')) return next();
+  res.sendFile(path.join(publicPath, 'index.html'));
+});
 
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   if (err.type === 'entity.too.large') {

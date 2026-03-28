@@ -1,14 +1,35 @@
-# Use the lightweight and secure Alpine Nginx image
-FROM nginx:alpine
+# Stage 1: Build the React client
+FROM node:20-alpine AS client-build
+WORKDIR /app/client
+COPY client/package*.json ./
+RUN npm install --legacy-peer-deps
+COPY client/ ./
+RUN npm run build
 
-# Cloud Run defaults to directing traffic to port 8080.
-# We must expose this port to ensure Cloud Run maps the traffic correctly.
+# Stage 2: Build the Express server
+FROM node:20-alpine AS server-build
+WORKDIR /app/server
+COPY server/package*.json ./
+RUN npm install --legacy-peer-deps
+COPY server/ ./
+RUN npx tsc -p tsconfig.json
+
+# Stage 3: Production image
+FROM node:20-alpine
+WORKDIR /app
+
+# Copy compiled server
+COPY --from=server-build /app/server/dist/src ./dist
+COPY server/package*.json ./
+RUN npm install --production --legacy-peer-deps
+
+# Copy built client into public/ directory (served by Express)
+COPY --from=client-build /app/client/dist ./public
+
+# Cloud Run uses port 8080
+ENV PORT=8080
+ENV NODE_ENV=production
+
 EXPOSE 8080
 
-# Modify the default Nginx configuration to listen on port 8080 instead of 80.
-# The user's mock-prototype.html will serve as the index.html.
-RUN sed -i -e 's/listen       80;/listen       8080;/g' /etc/nginx/conf.d/default.conf
-
-# Copy the custom HTML file into Nginx's strictly exposed html directory.
-# Rename it to index.html so Nginx serves it automatically on the root path (/).
-COPY mock-prototype.html /usr/share/nginx/html/index.html
+CMD ["node", "dist/server.js"]
