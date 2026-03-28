@@ -1,7 +1,8 @@
+import 'dotenv/config';
 import app from './app';
 
-const PORT = 3000; // Hardcoded for immediate hackathon execution
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-    console.log(`[SECURE] MedBridge Express server verified and running on port ${PORT}`);
+  console.log(`[SECURE] MedBridge Express server running on port ${PORT}`);
 });

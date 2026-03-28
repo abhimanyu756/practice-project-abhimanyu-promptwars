@@ -1,7 +1,22 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 
-export const Dropzone = () => {
-  // ACCESSIBILITY: Keyboard integration for non-mouse users
+interface DropzoneProps {
+  onFilesSelected: (files: File[]) => void;
+  files: File[];
+}
+
+export const Dropzone: React.FC<DropzoneProps> = ({ onFilesSelected, files }) => {
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleFiles = useCallback(
+    (fileList: FileList | null) => {
+      if (!fileList) return;
+      const selected = Array.from(fileList).slice(0, 3);
+      onFilesSelected(selected);
+    },
+    [onFilesSelected]
+  );
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -9,26 +24,58 @@ export const Dropzone = () => {
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => setIsDragging(false);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFiles(e.dataTransfer.files);
+  };
+
+  const filled = files.length > 0;
+  const className = [
+    'dropzone',
+    isDragging ? 'dropzone--active' : '',
+    filled ? 'dropzone--filled' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div 
-      className="dropzone-container"
-      role="button" 
-      tabIndex={0} 
+    <div
+      className={className}
+      role="button"
+      tabIndex={0}
       aria-label="Upload secure medical images by dropping or clicking"
       onKeyDown={handleKeyDown}
       onClick={() => document.getElementById('fileUpload')?.click()}
-      style={{
-          border: '2px dashed rgba(59, 130, 246, 0.5)', 
-          padding: '4rem 2rem', 
-          borderRadius: '12px',
-          textAlign: 'center',
-          cursor: 'pointer',
-          background: 'rgba(0,0,0,0.3)',
-          transition: 'all 0.2s'
-      }}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
-      <input type="file" id="fileUpload" style={{ display: 'none' }} aria-hidden="true" />
-      <p style={{ fontSize: '1.2rem', color: '#f3f4f6' }}>📸 Drag & Drop evidence here, or press <strong>Space</strong> / <strong>Click</strong> to upload safely.</p>
+      <input
+        type="file"
+        id="fileUpload"
+        className="sr-only"
+        aria-hidden="true"
+        multiple
+        accept="image/*"
+        onChange={(e) => handleFiles(e.target.files)}
+      />
+      <span className="dropzone__icon" aria-hidden="true">
+        {filled ? '\u2705' : '\u{1F4F8}'}
+      </span>
+      <p className="text-body">
+        {filled
+          ? <strong>{files.length} evidence file(s) attached</strong>
+          : <>Drag & drop evidence here, or press <strong>Space</strong> / <strong>Click</strong> to upload</>
+        }
+      </p>
     </div>
   );
 };
